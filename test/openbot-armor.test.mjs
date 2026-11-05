@@ -284,7 +284,7 @@ test("applyToRequest with injectArmor=false strips anti-jobs without injecting",
 
 
 test("a model quoting the protocol in history does not block system injection", () => {
-  // P1: dedupe must look only at the system prompt, not the whole history.
+  // Dedupe checks only the system prompt, not the whole history.
   const body = {
     messages: [
       { role: "system", content: "host system" },
@@ -300,7 +300,7 @@ test("a model quoting the protocol in history does not block system injection", 
 });
 
 test('ordinary sentences starting with "Limits" are not treated as sections', () => {
-  // P2: only real headings may start an anti-job section.
+  // Only real headings start an anti-job section.
   const text = "You are A.\n\nLimits apply to enterprise plans only.\nKeep this line.\n\n## Voice\nShort.";
   const out = stripPersonaAntiJobs(text, DEFAULTS);
   assert.match(out, /Limits apply to enterprise plans only/);
@@ -308,7 +308,7 @@ test('ordinary sentences starting with "Limits" are not treated as sections', ()
 });
 
 test("a description made only of anti-jobs is not restored from the original", () => {
-  // P3: cleaned-empty must not fall back to the original text.
+  // Cleaned-empty does not fall back to the original text.
   const profile = { name: "A", title: "T", description: "【不做什么】\n- 不接任何活\n- 不对外" };
   const text = "<agent_profile>\n" + JSON.stringify(profile, null, 2) + "\n</agent_profile>";
   const patched = patchProfile(text, DEFAULTS);

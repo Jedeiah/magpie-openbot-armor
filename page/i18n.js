@@ -1,6 +1,5 @@
-// The page's words, keyed by the English string. A missing key falls back to
-// English. Every key used by app.js has a zh entry, enforced by
-// test/page-i18n.test.mjs — no mixed-language output in a zh window.
+// Page translations keyed by the English source string. A missing key falls
+// back to English.
 ;(function () {
   var TABLE = {
     en: {},

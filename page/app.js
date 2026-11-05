@@ -515,7 +515,7 @@
         // in the next loop instead of being silently lost.
         var sentDraft = draft;
         var body = Object.assign({}, base, sentDraft);
-        delete body.status; // legacy status field from earlier versions
+        delete body.status;
         try {
           var saved = await magpie.options.set(body);
           base = saved && typeof saved === "object" ? Object.assign({}, body, saved) : body;

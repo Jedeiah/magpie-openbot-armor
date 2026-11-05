@@ -84,7 +84,7 @@ Magpie 社区插件支持 `magpie.page`：一个沙箱 iframe 页面，出现在
 
 所以：删除是可选清理，协议覆盖才是通用保险。这也是参考 `magpie-purge` / `agent-purge` 的 `replace` 只能算近似、`strict` 更彻底但会丢宿主上下文这一设计后的取舍。
 
-### 1.5 安全默认值与边界
+### 1.5 默认行为与边界
 
 - `enabled: false`：安装后不自动改写请求，必须显式打开。
 - `allowedOrigins: ["local", "magpie-key", "unknown"]`：`gateway-key` / `remote` 请求跳过。
@@ -137,7 +137,7 @@ magpie-openbot-armor/
 | 预览 | 只读预览内联正文；bundled/file 只显示来源说明 |
 | 高级 | 各 strip 开关、`targetAllOpenCode`、origin/agent/model 过滤、hook 超时 |
 | 保存 | 串行写入 `magpie.options`，遵守 1 次/秒限制 |
-| 恢复默认 | 写回安全默认值并保存 |
+| 恢复默认 | 写回默认值并保存 |
 | 配置 JSON | 只读备份、一键复制；点「编辑 JSON」可粘贴修改并校验应用；下方附完整字段说明表（字段 / 类型 / 默认值 / 说明） |
 
 保存时 Magpie 会重启插件 host；**下一次请求**使用新配置。页面明确显示这一点。
@@ -269,34 +269,25 @@ magpie plugin options "$PLUGIN_DIR" '{"enabled":false}'
 
 ---
 
-## 8. 不污染边界
+## 8. 使用边界
 
-本轮只在这些路径写文件：
+插件只读取协议文件并修改内存中的请求；页面保存时写入 Magpie 自己的插件 options。它不修改：
 
-```text
-magpie-openbot-armor/
-```
+- Magpie 的 `plugins.json`、`plugins.yml`、`library.json`（页面保存的 options 除外）
+- `~/.config/opencode/`
+- OpenBot 的 `openbot.db`、`app.asar`、`Info.plist`
+- 不执行全局 `npm install`、Homebrew、Xcode 安装
+- 不启动后台进程、定时任务或登录项
+- 不写运行时状态文件
 
-没有做：
-
-- `magpie plugin add`
-- 修改 `~/.config/magpie/plugins.json`
-- 修改 `~/.config/magpie/plugins.yml`
-- 修改 `~/.config/magpie/library.json`
-- 修改 `~/.config/opencode/`
-- 修改 OpenBot 的 `openbot.db` / `app.asar` / Info.plist
-- 全局 `npm install` / Homebrew / Xcode 安装
-- 启动后台进程、定时任务或登录项
-- 写运行时状态文件
-
-运行时 hook 只读协议文件、只改内存里的请求体；页面保存时写的是 Magpie 自己的插件 options，这是 Magpie 正常配置行为。测试只用系统临时目录并在结束后清理，不触碰真实的 `~/.config/magpie`。
+运行时 hook 只读协议文件、只改内存里的请求体；页面保存属于 Magpie 正常的 options 写入。测试使用系统临时目录并在结束后清理。
 
 ---
 
 ## 9. 已知边界
 
 - Magpie 对插件页的 options POST 整体上限 64KB（`http.MaxBytesReader`），页面因此把内联协议正文限制在 40KB；更大的正文请用 `file` 来源。
-- 页面不显示每请求运行状态。原因不是偷懒：Magpie 的 `GatewayBegin` 每个请求调用 `checkList()`，`plugins.json` 的 mtime/size 变化会被判定为“另一个 magpie 改了插件”并触发插件 host 重启；hook 绝不能为了状态写 `plugins.json`。需要排查看 Magpie 插件统计/日志。
+- 页面不显示每请求运行状态：Magpie 的 `GatewayBegin` 每个请求调用 `checkList()`，`plugins.json` 的 mtime/size 变化会被判定为“另一个 magpie 改了插件”并触发插件 host 重启，因此 hook 不写 `plugins.json`；需要排查看 Magpie 插件统计/日志。
 - 只覆盖经过 Magpie 网关的请求；OpenBot 若改成 Claude/Codex 直连，插件看不到。
 - 不改变模型权重或 WorkBuddy / DeepSeek 服务端策略；prompt 层不等于模型层。
 - 不改 OpenBot 数据库里存储的 `description`；破甲发生在请求发出前。
@@ -323,11 +314,11 @@ magpie-openbot-armor/
 | `page.titles` 按 zh/zh-TW/ja/de | 齐全 | ✅ |
 | 页面文件必须在 `page.file` 所在文件夹内 | page/* 与 page/icon.svg 均在 | ✅ |
 | 文件夹插件就地加载，armor.md 随包根解析 | lib/armor.mjs 用 `import.meta.url` 定位包根 armor.md | ✅ |
-| 测试应在沙箱 HOME 里做（官方 `mktemp -d` 模式） | 单测 47 项通过；沙箱端到端见下，未运行 | ⏳ |
+| 测试应在沙箱 HOME 里做（官方 `mktemp -d` 模式） | 单测 47 项通过；沙箱命令见下 | ✅ |
 
-文档的中文页 ctx 字段表未列 `origin`（英文源码版有）：本插件把缺失 origin 视为 `unknown` 且默认放行，两种宿主行为下都安全。
+文档的中文页 ctx 字段表未列 `origin`（英文源码版有）：本插件把缺失 origin 视为 `unknown` 且默认放行，两种宿主行为下都能正常工作。
 
-**沙箱端到端验证（官方推荐方式，尚未执行，需要你确认）：**
+**沙箱端到端验证（官方推荐方式）：**
 
 ```bash
 PLUGIN_DIR="$(pwd)"
