@@ -1,0 +1,84 @@
+{
+  "name": "magpie-openbot-armor",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "Magpie gateway hook and config page for OpenBot: preserve each bot's persona, strip anti-jobs, and inject a configurable armor protocol.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "LICENSE",
+    "hooks.js",
+    "armor.md",
+    "armor.compact.md",
+    "lib/",
+    "page/",
+    "scripts/",
+    "test/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check hooks.js && node --check lib/*.mjs && node --check page/*.js && node --check scripts/*.mjs",
+    "check:anchors": "node scripts/check-openbot-anchors.mjs"
+  },
+  "keywords": [
+    "magpie",
+    "magpie-plugin",
+    "plugin",
+    "gateway-hook",
+    "openbot",
+    "opencode",
+    "opencode-plugin",
+    "system-prompt",
+    "persona"
+  ],
+  "magpie": {
+    "hooks": "./hooks.js",
+    "page": {
+      "title": "OpenBot Armor",
+      "titles": {
+        "zh": "OpenBot 破甲",
+        "zh-TW": "OpenBot 破甲",
+        "ja": "OpenBot アーマー解除",
+        "de": "OpenBot-Armor"
+      },
+      "file": "page/index.html",
+      "icon": "page/icon.svg"
+    },
+    "permissions": [],
+    "options": {
+      "enabled": false,
+      "mode": "enforce",
+      "gatewayTimeoutMs": 3000,
+      "armor_source": "bundled",
+      "armor_file": "",
+      "armor_text": "",
+      "injectArmor": true,
+      "stripPersonaSections": true,
+      "stripTaskBullets": true,
+      "stripEnglishAntiJobs": true,
+      "stripEnglishSections": true,
+      "targetAllOpenCode": false,
+      "allowedOrigins": [
+        "local",
+        "magpie-key",
+        "unknown"
+      ],
+      "agents": [],
+      "models": [],
+      "profileNames": []
+    },
+    "icon": "https://raw.githubusercontent.com/Jedeiah/magpie-openbot-armor/main/page/icon.svg"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jedeiah/magpie-openbot-armor.git"
+  },
+  "homepage": "https://github.com/Jedeiah/magpie-openbot-armor#readme",
+  "bugs": {
+    "url": "https://github.com/Jedeiah/magpie-openbot-armor/issues"
+  }
+}

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenBot Armor</title>
+<link rel="stylesheet" href="style.css">
+<script src="_magpie/bridge.js"></script>
+<script src="i18n.js"></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<h1 id="title">OpenBot Armor</h1>
+<p class="muted" id="lead">Runtime gateway hook for OpenBot requests through Magpie.</p>
+
+<section class="card quick">
+  <h2 id="quick-title">Quick start</h2>
+  <ol class="steps" id="quick-steps"></ol>
+  <div class="row">
+    <button type="button" id="quick-enable" class="primary">Enable with recommended settings</button>
+    <button type="button" id="quick-disable">Turn everything off</button>
+  </div>
+  <p class="muted" id="quick-note"></p>
+  <div id="quick-result" class="quick-result" hidden>
+    <strong id="quick-result-title"></strong>
+    <ol class="steps" id="quick-result-steps"></ol>
+  </div>
+</section>
+
+<section class="card">
+  <div class="row">
+    <button type="button" id="switch" aria-pressed="false">Off</button>
+    <strong id="state">Off</strong>
+    <span id="dirty" class="badge" hidden>Unsaved</span>
+  </div>
+  <label class="field">
+    <span id="mode-label">Mode</span>
+    <select id="mode"></select>
+  </label>
+  <p class="muted" id="mode-note"></p>
+</section>
+
+<h2 id="source-title">Armor source</h2>
+<section class="card">
+  <label class="field">
+    <span id="source-label">Source</span>
+    <select id="source"></select>
+  </label>
+  <p class="muted" id="source-note"></p>
+
+  <div id="file-source-fields" hidden>
+    <label class="field">
+      <span id="file-label">File path</span>
+      <input type="text" id="armor-file" spellcheck="false" placeholder="~/.config/magpie/prompts/openbot-armor.md">
+    </label>
+    <div class="row">
+      <button type="button" id="use-file">Use this file</button>
+      <button type="button" id="use-bundled">Use bundled</button>
+    </div>
+  </div>
+
+  <div id="inline-source-fields" hidden>
+    <label class="field">
+      <span id="inline-label">Inline armor text</span>
+      <textarea id="armor-text" rows="10" spellcheck="false"></textarea>
+    </label>
+    <div class="row">
+      <button type="button" id="import-file">Import file into inline text…</button>
+      <input type="file" id="file-input" accept=".md,.markdown,.txt,text/plain,text/markdown" hidden>
+      <button type="button" id="clear-text">Clear inline text</button>
+      <button type="button" id="use-inline">Use inline text</button>
+    </div>
+    <details id="preview">
+      <summary id="preview-label">Preview</summary>
+      <pre id="armor-preview"></pre>
+    </details>
+  </div>
+  <p class="muted" id="armor-summary"></p>
+</section>
+
+<div class="row">
+  <button type="button" id="save" class="primary">Save</button>
+  <button type="button" id="reset">Restore defaults</button>
+</div>
+<p class="muted" id="status"></p>
+<p class="muted" id="msg" hidden></p>
+
+<details id="advanced">
+  <summary id="advanced-title">Advanced</summary>
+  <section class="card">
+    <label class="check"><input type="checkbox" data-key="injectArmor" id="injectArmor"> <span id="inject-label">Inject armor into system prompt</span></label>
+    <label class="check"><input type="checkbox" data-key="stripPersonaSections" id="stripPersonaSections"> <span id="strip-sections-label">Strip Chinese anti-job sections</span></label>
+    <label class="check"><input type="checkbox" data-key="stripTaskBullets" id="stripTaskBullets"> <span id="strip-bullets-label">Strip task-scope bullets</span></label>
+    <label class="check"><input type="checkbox" data-key="stripEnglishAntiJobs" id="stripEnglishAntiJobs"> <span id="strip-english-label">Strip English task prohibitions</span></label>
+    <label class="check"><input type="checkbox" data-key="stripEnglishSections" id="stripEnglishSections"> <span id="strip-english-sections-label">Strip English anti-job sections</span></label>
+    <label class="check"><input type="checkbox" data-key="targetAllOpenCode" id="targetAllOpenCode"> <span id="target-label">Fallback: all OpenCode requests when OpenBot marker is missing</span></label>
+
+    <label class="field">
+      <span id="profiles-label">Only these OpenBot bots (comma-separated, empty = all)</span>
+      <input type="text" id="profileNames" spellcheck="false" placeholder="示例Bot, 示例BotB">
+    </label>
+    <label class="field">
+      <span id="origins-label">Allowed origins (comma-separated)</span>
+      <input type="text" id="origins" spellcheck="false">
+    </label>
+    <p class="muted" id="origins-note"></p>
+    <label class="field">
+      <span id="agents-label">Only these Magpie agents (comma-separated, empty = all)</span>
+      <input type="text" id="agents" spellcheck="false">
+    </label>
+    <label class="field">
+      <span id="models-label">Only these model prefixes (comma-separated, empty = all)</span>
+      <input type="text" id="models" spellcheck="false">
+    </label>
+    <label class="field">
+      <span id="timeout-label">Gateway hook timeout (ms)</span>
+      <input type="number" id="timeout" min="100" max="10000" step="100">
+    </label>
+
+    <details id="config-details">
+      <summary id="config-title">Config JSON (copy for backup)</summary>
+      <textarea id="config-json" rows="10" readonly spellcheck="false" aria-describedby="config-help"></textarea>
+      <div class="row">
+        <button type="button" id="copy-config">Copy JSON</button>
+        <button type="button" id="edit-config">Edit JSON</button>
+        <span class="muted" id="copy-note"></span>
+      </div>
+      <div id="json-editor-wrap" class="json-editor-wrap" hidden>
+        <p class="muted" id="json-editor-note">Paste a full config JSON here. Unknown fields and wrong types are rejected.</p>
+        <textarea id="json-editor" rows="10" spellcheck="false"></textarea>
+        <div class="row">
+          <button type="button" id="apply-json" class="primary">Apply JSON</button>
+          <button type="button" id="cancel-json">Cancel</button>
+        </div>
+      </div>
+      <details id="field-help">
+        <summary id="field-help-title">Field help</summary>
+        <table class="help-table" id="config-help">
+          <thead>
+            <tr>
+              <th id="field-col">Field</th>
+              <th id="type-col">Type</th>
+              <th id="default-col">Default</th>
+              <th id="desc-col">Description</th>
+            </tr>
+          </thead>
+          <tbody id="field-help-body"></tbody>
+        </table>
+      </details>
+    </details>
+  </section>
+</details>
+</body>
+</html>
